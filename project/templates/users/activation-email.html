@@ -1,5 +1,5 @@
 {% autoescape off %}  
 Hi {{ user.nickname }},  
 Please click on the link to confirm your registration,  
-{{ protocol }}://{{ domain }}{% url 'users:activate' uidb64=uid token=token %}  
+{{ protocol }}://{{ domain }}{% url 'users:activation_activate' uidb64=uid token=token %}  
 {% endautoescape %}  

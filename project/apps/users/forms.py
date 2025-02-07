@@ -36,11 +36,6 @@ class RegisterForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        nickname = self.cleaned_data.get('nickname')
-        if not nickname:
-            username = self.cleaned_data.get('username')
-            user.nickname = username
-
         if commit:
             user.save()
 

@@ -1,4 +1,4 @@
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest
 
 # Authentication
 from django.contrib import auth
@@ -9,6 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from .tokens import account_activation_token
+from .decorators import during_register, during_password_reset
+from .decorators import USER_ACTIVATION_SESSION, PASSWORD_RESET_SESSION
 
 # Views
 from django.shortcuts import render, redirect
@@ -18,9 +20,7 @@ from . import urls, forms
 
 
 # Authentication
-def login(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
-    """Login page"""
-
+def login(request: HttpRequest):
     template = get_template(app=urls.app_name)
 
     if request.method == 'GET':
@@ -44,16 +44,13 @@ def login(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
 
 @login_required
 def logout(request):
-    """Logout page"""
-
     auth.logout(request)
     return redirect('users:login')
 
 
-# Activation
-def register(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
-    """Registration page"""
 
+# Activation
+def register(request: HttpRequest):
     template = get_template(app=urls.app_name)
 
     if request.method == 'GET':
@@ -63,7 +60,7 @@ def register(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
         form = forms.RegisterForm(request.POST)
         if form.is_valid():
             user = form.send_email_activation(request)
-            request.session['activation'] = True
+            request.session[USER_ACTIVATION_SESSION] = True
             return redirect('users:activation_send', to_email=user.email)
 
     return render(request, template, {
@@ -71,20 +68,16 @@ def register(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
     })
 
 
-def activation_send(request: HttpRequest, to_email: str) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('activation') == False:
-        return redirect('users:login')
-
+@during_register
+def activation_send(request: HttpRequest, to_email: str):
     template = get_template(app=urls.app_name)
     return render(request, template, {
         'to_email': to_email,
     })
 
 
-def activate(request: HttpRequest, uidb64: str, token: str) -> HttpResponseRedirect:
-    if request.session.get('activation') == False:
-        return redirect('users:login')
-    
+@during_register
+def activation_activate(request: HttpRequest, uidb64: str, token: str):
     User = get_user_model()
 
     try:
@@ -100,29 +93,26 @@ def activate(request: HttpRequest, uidb64: str, token: str) -> HttpResponseRedir
     return redirect('users:activation_fail')
 
 
-def activation_success(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('activation') == False:
-        return redirect('users:login')
-
-    request.session['activation'] = False
+@during_register
+def activation_success(request: HttpRequest):
+    request.session[USER_ACTIVATION_SESSION] = False
     template = get_template(app=urls.app_name)
 
     return render(request, template)
 
 
-def activation_fail(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('activation') == False:
-        return redirect('users:login')
-
-    request.session['activation'] = False
+@during_register
+def activation_fail(request: HttpRequest):
+    request.session[USER_ACTIVATION_SESSION] = False
     template = get_template(app=urls.app_name)
 
     return render(request, template)
+
 
 
 # Password management
 @login_required
-def change_password(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
+def change_password(request: HttpRequest):
     template = get_template(app=urls.app_name)
     user = request.user
 
@@ -140,7 +130,7 @@ def change_password(request: HttpRequest) -> HttpResponse | HttpResponseRedirect
     })
 
 
-def reset_password(request: HttpRequest) -> HttpResponse:
+def reset_password(request: HttpRequest):
     template = get_template(app=urls.app_name)
     if request.method == 'GET':
         form = forms.PasswordResetForm()
@@ -149,7 +139,7 @@ def reset_password(request: HttpRequest) -> HttpResponse:
         form = forms.PasswordResetForm(request.POST)
         if form.is_valid():
             user = form.send_password_reset(request)
-            request.session['reset'] = True
+            request.session[PASSWORD_RESET_SESSION] = True
             return redirect('users:reset_password_send', to_email=user.email)
 
 
@@ -158,20 +148,16 @@ def reset_password(request: HttpRequest) -> HttpResponse:
     })
 
 
-def reset_password_send(request: HttpRequest, to_email: str) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('reset') == False:
-        return redirect('users:login')
-
+@during_password_reset
+def reset_password_send(request: HttpRequest, to_email: str):
     template = get_template(app=urls.app_name)
     return render(request, template, {
         'to_email': to_email,
     })
 
 
-def reset(request: HttpRequest, uidb64: str, token: str) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('reset') == False:
-        return redirect('users:login')
-    
+@during_password_reset
+def reset_password_reset(request: HttpRequest, uidb64: str, token: str):
     User = get_user_model()
 
     try:
@@ -197,21 +183,17 @@ def reset(request: HttpRequest, uidb64: str, token: str) -> HttpResponse | HttpR
     })
 
 
-def reset_password_success(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('reset') == False:
-        return redirect('users:login')
-
-    request.session['reset'] = False
+@during_password_reset
+def reset_password_success(request: HttpRequest):
+    request.session[PASSWORD_RESET_SESSION] = False
     template = get_template(app=urls.app_name)
 
     return render(request, template)
 
 
-def reset_password_fail(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
-    if request.session.get('reset') == False:
-        return redirect('users:login')
-
-    request.session['reset'] = False
+@during_password_reset
+def reset_password_fail(request: HttpRequest):
+    request.session[PASSWORD_RESET_SESSION] = False
     template = get_template(app=urls.app_name)
 
     return render(request, template)
