@@ -1,0 +1,12 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+
+{% block static %}
+<link rel="stylesheet" href="{% static 'users/activation-fail.css' %}">
+{% endblock static %}
+
+
+{% block content %}
+Fail!
+{% endblock content %}

@@ -1,0 +1,18 @@
+{
+  "name": "django",
+  "version": "1.0.0",
+  "scripts": {
+    "sass:build": "node scripts/sass/build-sass.js",
+    "sass:watch": "node scripts/sass/watch-sass.js",
+    "sass:import": "node scripts/sass/import-sass.js",
+    "sass": "npm run sass:import && npm run sass:watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "glob": "^11.0.1",
+    "sass": "^1.84.0"
+  },
+  "description": ""
+}

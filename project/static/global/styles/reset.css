@@ -1,0 +1,61 @@
+
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+      vertical-align: baseline;
+  }
+  
+  html {
+    height: 100%;
+  }
+  
+  body {
+    min-height: 100%;
+  }
+  
+  header, footer, main, 
+  section, article, aside {
+    container-type: inline-size;
+  }
+  
+  h1, h2, h3,
+  h4, h5, h6 {
+    font-weight: normal;
+    text-wrap: balance;
+  }
+  
+  p, li, figcaption {
+    text-wrap: pretty;
+    max-width: 65ch;
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+    font-style: italic;
+    background-repeat: no-repeat;
+    background-size: cover;
+    shape-margin: 1rem;
+  }
+  
+  ol, ul {
+      list-style: none;
+  }
+  
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+  
+@media (prefers-reduced-motion: no-preference) {
+:has(:target) {
+    scroll-behavior: smooth;
+    scroll-padding-top: 3rem;
+  }
+}
