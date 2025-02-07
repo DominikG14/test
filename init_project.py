@@ -3,6 +3,15 @@ import subprocess
 import sys
 
 
+ENV_CONTENT = """# MUST BE SET TO RUN PROJECT
+SECRET_KEY=""
+
+# Email
+EMAIL=""
+EMAIL_PASSWORD=""
+"""
+
+
 def run_command(command: list[str], shell: bool = False):
     """Run a shell command and handle any errors.
 
@@ -97,16 +106,8 @@ class ProjectSetup:
         """
 
         if not os.path.exists('.env'):
-            env_content = """# MUST BE SET TO RUN PROJECT
-                SECRET_KEY=""
-
-                # Email
-                EMAIL=""
-                EMAIL_PASSWORD=""
-            """
-
             with open('.env', "w") as file:
-                file.write(env_content)
+                file.write(ENV_CONTENT)
                 print(f"'.env' created successfully.")
         else:
             print(f"'.env' already exists.")

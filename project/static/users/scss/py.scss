@@ -1,9 +1,0 @@
-import os
-
-
-with os.scandir('scss') as dir:
-    for file in dir:
-        name = file.name.split('.')[0]
-        name = f'{name}.scss'
-
-        os.rename(f'scss/{file.name}', f'scss/{name}')

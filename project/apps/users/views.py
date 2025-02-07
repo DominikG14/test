@@ -35,7 +35,7 @@ def login(request: HttpRequest):
             )
             if user:
                 auth.login(request, user)
-                return redirect('/') #TODO: Add after login destination
+                return redirect('/users') #TODO: Add after login destination
 
     return render(request, template, {
         'form': form
@@ -68,7 +68,7 @@ def register(request: HttpRequest):
     })
 
 
-@during_register
+@during_register()
 def activation_send(request: HttpRequest, to_email: str):
     template = get_template(app=urls.app_name)
     return render(request, template, {
@@ -76,7 +76,7 @@ def activation_send(request: HttpRequest, to_email: str):
     })
 
 
-@during_register
+@during_register()
 def activation_activate(request: HttpRequest, uidb64: str, token: str):
     User = get_user_model()
 
@@ -93,7 +93,7 @@ def activation_activate(request: HttpRequest, uidb64: str, token: str):
     return redirect('users:activation_fail')
 
 
-@during_register
+@during_register()
 def activation_success(request: HttpRequest):
     request.session[USER_ACTIVATION_SESSION] = False
     template = get_template(app=urls.app_name)
@@ -101,7 +101,7 @@ def activation_success(request: HttpRequest):
     return render(request, template)
 
 
-@during_register
+@during_register()
 def activation_fail(request: HttpRequest):
     request.session[USER_ACTIVATION_SESSION] = False
     template = get_template(app=urls.app_name)
@@ -148,7 +148,7 @@ def reset_password(request: HttpRequest):
     })
 
 
-@during_password_reset
+@during_password_reset()
 def reset_password_send(request: HttpRequest, to_email: str):
     template = get_template(app=urls.app_name)
     return render(request, template, {
@@ -156,7 +156,7 @@ def reset_password_send(request: HttpRequest, to_email: str):
     })
 
 
-@during_password_reset
+@during_password_reset()
 def reset_password_reset(request: HttpRequest, uidb64: str, token: str):
     User = get_user_model()
 
@@ -183,7 +183,7 @@ def reset_password_reset(request: HttpRequest, uidb64: str, token: str):
     })
 
 
-@during_password_reset
+@during_password_reset()
 def reset_password_success(request: HttpRequest):
     request.session[PASSWORD_RESET_SESSION] = False
     template = get_template(app=urls.app_name)
@@ -191,7 +191,7 @@ def reset_password_success(request: HttpRequest):
     return render(request, template)
 
 
-@during_password_reset
+@during_password_reset()
 def reset_password_fail(request: HttpRequest):
     request.session[PASSWORD_RESET_SESSION] = False
     template = get_template(app=urls.app_name)
