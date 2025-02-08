@@ -44,7 +44,7 @@ def get_template(template_name: str = '', *, path: str = '', app: str) -> str:
     return template
 
 
-def unauthenticated_user(redirect_to: str = ''):
+def unauthenticated_only(redirect_to: str = ''):
     """
     Decorator to restrict view access to unauthenticated users only.
 
@@ -71,7 +71,7 @@ def unauthenticated_user(redirect_to: str = ''):
     return decorator
 
 
-def allowed_users(allowed_roles: list[str], redirect_to: str = ''):
+def role_required(allowed_roles: list[str], redirect_to: str = ''):
     """
     Decorator to restrict view access to users with specific roles only.
 
@@ -98,5 +98,32 @@ def allowed_users(allowed_roles: list[str], redirect_to: str = ''):
                 return view_func(request, *args, **kwargs)
             return redirect(redirect_to)
             
+        return wrapper
+    return decorator
+
+
+def session_required(allowed_sessions: list[str], redirect_to: str = ''):
+    """
+    Decorator to restrict access to views only for users during specified sessions.
+
+    Parameters
+    ----------
+    allowed_sessions : list of str
+        List of session names that are allowed to access the view.
+    redirect_to : str, optional
+        URL to redirect if password reset session key is False (default is '').
+
+    Returns
+    -------
+    callable
+        A decorator function for the view.
+    """
+    def decorator(view_func):
+        @functools.wraps(view_func)
+        def wrapper(request: HttpRequest, *args, **kwargs):
+            if any(request.session.get(session, False) for session in allowed_sessions):
+                return view_func(request, *args, **kwargs)
+            return redirect(redirect_to)
+        
         return wrapper
     return decorator

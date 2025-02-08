@@ -9,14 +9,16 @@ from django.contrib.auth.decorators import login_required
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from .tokens import account_activation_token
-from .decorators import during_register, during_password_reset
-from .decorators import USER_ACTIVATION_SESSION, PASSWORD_RESET_SESSION
 
 # Views
 from django.shortcuts import render, redirect
-from utils.views import get_template
+from utils.views import get_template, session_required
 from . import urls, forms
 
+
+# Sessions
+USER_ACTIVATION_SESSION = 'user_activation'
+PASSWORD_RESET_SESSION  = 'password_reset'
 
 
 # Authentication
@@ -87,7 +89,7 @@ def activation_activate(request: HttpRequest, uidb64: str, token: str):
     return redirect('users:activation_fail')
 
 
-@during_register()
+@session_required(USER_ACTIVATION_SESSION, redirect_to='users:login')
 def activation_success(request: HttpRequest):
     try:
         del request.session[USER_ACTIVATION_SESSION]
@@ -98,7 +100,7 @@ def activation_success(request: HttpRequest):
     return render(request, template)
 
 
-@during_register()
+@session_required(USER_ACTIVATION_SESSION, redirect_to='users:login')
 def activation_fail(request: HttpRequest):
     try:
         del request.session[USER_ACTIVATION_SESSION]
@@ -174,7 +176,7 @@ def reset_password_reset(request: HttpRequest, uidb64: str, token: str):
     })
 
 
-@during_password_reset()
+@session_required(PASSWORD_RESET_SESSION, redirect_to='users:login')
 def reset_password_success(request: HttpRequest):
     try:
         del request.session[PASSWORD_RESET_SESSION]
@@ -185,7 +187,7 @@ def reset_password_success(request: HttpRequest):
     return render(request, template)
 
 
-@during_password_reset()
+@session_required(PASSWORD_RESET_SESSION, redirect_to='users:login')
 def reset_password_fail(request: HttpRequest):
     try:
         del request.session[PASSWORD_RESET_SESSION]
