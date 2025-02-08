@@ -9,14 +9,16 @@ from django.contrib.auth.decorators import login_required
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from .tokens import account_activation_token
-from .decorators import during_register, during_password_reset
-from .decorators import USER_ACTIVATION_SESSION, PASSWORD_RESET_SESSION
 
 # Views
 from django.shortcuts import render, redirect
-from utils.views import get_template
+from utils.views import get_template, session_required
 from . import urls, forms
 
+
+# Sessions
+USER_ACTIVATION_SESSION = 'user_activation'
+PASSWORD_RESET_SESSION  = 'password_reset'
 
 
 # Authentication
@@ -35,7 +37,10 @@ def login(request: HttpRequest):
             )
             if user:
                 auth.login(request, user)
-                return redirect('/users') #TODO: Add after login destination
+                next_url = request.GET.get('next')
+                if next_url:
+                    return redirect(next_url)
+                return redirect('/users')
 
     return render(request, template, {
         'form': form
@@ -59,24 +64,15 @@ def register(request: HttpRequest):
     if request.method == 'POST': 
         form = forms.RegisterForm(request.POST)
         if form.is_valid():
-            user = form.send_email_activation(request)
+            form.send_email_activation(request)
             request.session[USER_ACTIVATION_SESSION] = True
-            return redirect('users:activation_send', to_email=user.email)
+            return redirect('users:login')
 
     return render(request, template, {
         'form': form
     })
 
 
-@during_register()
-def activation_send(request: HttpRequest, to_email: str):
-    template = get_template(app=urls.app_name)
-    return render(request, template, {
-        'to_email': to_email,
-    })
-
-
-@during_register()
 def activation_activate(request: HttpRequest, uidb64: str, token: str):
     User = get_user_model()
 
@@ -93,19 +89,25 @@ def activation_activate(request: HttpRequest, uidb64: str, token: str):
     return redirect('users:activation_fail')
 
 
-@during_register()
+@session_required(USER_ACTIVATION_SESSION, redirect_to='users:login')
 def activation_success(request: HttpRequest):
-    request.session[USER_ACTIVATION_SESSION] = False
-    template = get_template(app=urls.app_name)
+    try:
+        del request.session[USER_ACTIVATION_SESSION]
+    except KeyError:
+        pass
 
+    template = get_template(app=urls.app_name)
     return render(request, template)
 
 
-@during_register()
+@session_required(USER_ACTIVATION_SESSION, redirect_to='users:login')
 def activation_fail(request: HttpRequest):
-    request.session[USER_ACTIVATION_SESSION] = False
-    template = get_template(app=urls.app_name)
+    try:
+        del request.session[USER_ACTIVATION_SESSION]
+    except KeyError:
+        pass
 
+    template = get_template(app=urls.app_name)
     return render(request, template)
 
 
@@ -138,9 +140,9 @@ def reset_password(request: HttpRequest):
     if request.method == 'POST':
         form = forms.PasswordResetForm(request.POST)
         if form.is_valid():
-            user = form.send_password_reset(request)
+            form.send_password_reset(request)
             request.session[PASSWORD_RESET_SESSION] = True
-            return redirect('users:reset_password_send', to_email=user.email)
+            return redirect('users:login')
 
 
     return render(request, template, {
@@ -148,15 +150,6 @@ def reset_password(request: HttpRequest):
     })
 
 
-@during_password_reset()
-def reset_password_send(request: HttpRequest, to_email: str):
-    template = get_template(app=urls.app_name)
-    return render(request, template, {
-        'to_email': to_email,
-    })
-
-
-@during_password_reset()
 def reset_password_reset(request: HttpRequest, uidb64: str, token: str):
     User = get_user_model()
 
@@ -183,17 +176,23 @@ def reset_password_reset(request: HttpRequest, uidb64: str, token: str):
     })
 
 
-@during_password_reset()
+@session_required(PASSWORD_RESET_SESSION, redirect_to='users:login')
 def reset_password_success(request: HttpRequest):
-    request.session[PASSWORD_RESET_SESSION] = False
+    try:
+        del request.session[PASSWORD_RESET_SESSION]
+    except KeyError:
+        pass
+    
     template = get_template(app=urls.app_name)
-
     return render(request, template)
 
 
-@during_password_reset()
+@session_required(PASSWORD_RESET_SESSION, redirect_to='users:login')
 def reset_password_fail(request: HttpRequest):
-    request.session[PASSWORD_RESET_SESSION] = False
-    template = get_template(app=urls.app_name)
+    try:
+        del request.session[PASSWORD_RESET_SESSION]
+    except KeyError:
+        pass
 
+    template = get_template(app=urls.app_name)
     return render(request, template)
