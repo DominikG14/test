@@ -32,14 +32,6 @@ class RegisterForm(UserCreationForm):
             'password1',
             'password2'
         ]
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-
-        if commit:
-            user.save()
-
-        return user
     
     def send_email_activation(self, request: HttpRequest,) -> models.User:
         user = self.save(commit=False)
