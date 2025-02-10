@@ -38,7 +38,7 @@ function importSass(scssFile) {
     if (data.startsWith(SASS_IMPORT)) return;
 
     // Combine the import to be added with the current content
-    const newData = `${SASS_IMPORT}\n\n\n${data}`;
+    const newData = `${SASS_IMPORT}\n${data}`;
     fs.writeFile(scssFile, newData, 'utf8', (err) => {});
   });
 }
